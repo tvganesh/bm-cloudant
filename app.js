@@ -99,12 +99,21 @@ var update_records = function(req, res) {
 	console.log(remote);
 	db.replicate.to(remote, opts);
 	db.replicate.from(remote, opts);
-	db.get('book1', function(err, otherDoc) {
-		  db.put({
-		    title: "The Client"
-		  }, ' book1', function(err, response) {
-		  });
-		});
+	db.get('book3', function(err, response) {
+		console.log(response);
+		return db.put({
+		    _id: 'book3',
+		    _rev: response._rev,
+		    author: response.author,
+			Title : 'The da Vinci Code',			  
+		 });
+		}, function(err, response) {
+		  if (err) {
+		    console.log("error " + err);
+		  } else {
+		    console.log("Success " + response);
+		  }
+	});
 	res.writeHead(200, {'Content-Type': 'text/plain'});
  	res.write("Updated 1 records");
  	res.end();
@@ -135,14 +144,13 @@ var delete_record = function(req, res) {
 	db.replicate.from(remote, opts);
     //Deleting documents
 	db.get('book1', function(err, doc) {
-		db.remove(doc, function(err, response) { });
+		db.remove(doc, function(err, response) { 
+			console.log(err || response);
+		});
 	});
 	
-	
-	
-	
 	res.writeHead(200, {'Content-Type': 'text/plain'});
- 	res.write("Deleted 2 records");
+ 	res.write("Deleted book1");
  	res.end();
 }; //End delete-records
 
@@ -179,23 +187,21 @@ var list_records = function(req, res) {
 		var details = "";
 		j=0;
 		for(i=0; i < val; i++) {
-			console.log("3");			
+						
 				//get_docs(db.get(response.rows[i].id),res, function (err,doc){
 			db.get(response.rows[i].id, function (err,doc){
-				 j++;
-				console.log("i=" + i + "j = " + j);			
-				res.write(JSON.stringify(doc.Title) + "\n");			
-				console.log(JSON.stringify(doc.Title) + "\n");									
-			    details= details + JSON.stringify(doc.Title) + "\n";
-			    if(j == 3) {
-			    	console.log('Here');
+				 j++;	
+				//res.write(JSON.stringify(doc.Title) + JSON.stringify(doc.author) + "\n");			
+				//console.log(JSON.stringify(doc.Title) + " by " + JSON.stringify(doc.author) + "\n");									
+			    details= details + JSON.stringify(doc.Title) + " by  " +  JSON.stringify(doc.author) + "\n";
+			    if(j == val) {
+			    	console.log('Starting details');
 			    	res.writeHead(200, {'Content-Type': 'text/plain'});
 			    	res.write(details);
 			    	res.end();
-			    }
-			    console.log(details);
-			   
-			    
+			    	console.log(details);
+			    	console.log('End details');
+			    }		    
 			   
 		   }); // End db.get
 			
