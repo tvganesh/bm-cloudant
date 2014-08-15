@@ -146,10 +146,7 @@ var delete_record = function(req, res) {
  	res.end();
 }; //End delete-records
 
-function map(doc) {
-	  // sort by last name, first name, and age
-	  emit([doc.author, doc.Title]);
-}
+
 
 //List Records from the test DB
 var list_records = function(req, res) {
@@ -169,48 +166,49 @@ var list_records = function(req, res) {
 	opts = {
 	  continuous: true
 	 };
-	
-	
+		
    //Create a collection test
 	console.log(remote);
 	db.replicate.to(remote, opts);
 	db.replicate.from(remote, opts);	
 
-	var docs = db.allDocs({include_docs: true}, function(err, response) { 
-		 console.log("1");
-		//console.log(err || response);
-		var val = response.total_rows;
-		var value = "";
-		//res.writeHead(200, {'Content-Type': 'text/plain'});
-		res.writeHead(200, {'Content-Type': 'text/plain'});
-		 console.log("2");
-		for(i=0; i < val; i++) {
-			console.log("3");
-			//res.write('This is a test');
-			//res.writeHead(200, {'Content-Type': 'text/plain'});
-			console.log(JSON.stringify(response.rows[i].id) + "\n");	
-			res.write(JSON.stringify(response.rows[i].id) + "\n");
-			db.get(response.rows[i].id, function (err,doc,res){
-				//res.write(JSON.stringify(doc) + "\n");
-				//res.write(JSON.stringify((doc._id) + ":" + (doc.Title) + ":" + (doc.author) +  "\n)"));
-				//res.write(JSON.stringify(doc._id) + ":"+ String(doc.Title) + ":" +  String(doc.author) +  "\n");
-				//console.log(String(doc._id) + ":"+ String(doc.Title) + ":" +  String(doc.author) +  "\n");				
-				//res.write(JSON.stringify(doc.Title) + "\n");
-				//res.write('This is a test');
-				//console.log(JSON.stringify(doc.Title) + "\n");
-				//console.log(doc.author);
-			   //console.log(doc.Title);
-			   //console.log(doc._id);		
-			});		
-		}
-		res.end();
-		//value = "This is a test";
-		//res.writeHead(200, {'Content-Type': 'text/plain'});
-		//res.write(value);
+	var docs = db.allDocs(function(err, response) { 
+		console.log("1");
+		val = response.total_rows;
 		
-        console.log("in list");
-	 });
-}; 
+		var details = "";
+		j=0;
+		for(i=0; i < val; i++) {
+			console.log("3");			
+				//get_docs(db.get(response.rows[i].id),res, function (err,doc){
+			db.get(response.rows[i].id, function (err,doc){
+				 j++;
+				console.log("i=" + i + "j = " + j);			
+				res.write(JSON.stringify(doc.Title) + "\n");			
+				console.log(JSON.stringify(doc.Title) + "\n");									
+			    details= details + JSON.stringify(doc.Title) + "\n";
+			    if(j == 3) {
+			    	console.log('Here');
+			    	res.writeHead(200, {'Content-Type': 'text/plain'});
+			    	res.write(details);
+			    	res.end();
+			    }
+			    console.log(details);
+			   
+			    
+			   
+		   }); // End db.get
+			
+		} //End for
+		console.log("6");
+		
+        console.log("in list");	
+	
+     }); // End db.allDocs
+
+   
+  };
+
 
 var port = (process.env.VCAP_APP_PORT || 1337);
 var host = (process.env.VCAP_APP_HOST || '0.0.0.0');
@@ -238,53 +236,22 @@ require('http').createServer(function(req, res) {
 	    };	   
 	    console.log(remote);
 		db.replicate.to(remote, opts);
-		db.replicate.from(remote, opts);
-		//db.destroy();
-		// create a document; log the response
-		/*db.put({
-		  name: 'Mike Broberg'
-		}, 'mydoc', function (err, response) {
-		  console.log(err || response);
-		});
-		
-		db.put({
-			  title: 'Heroes'
-			}, 'mydoc1', function(err, response) {
-				console.log(err || response);
-			});
-		console.log("Reached1");
-		// read a document by ID; log the response
-		db.get('mydoc', function(err, doc) { 
-			console.log(err || doc);
-		});
-	   db.get('mydoc1', function(err, doc) { 
-		   console.log(err || response);
-		});
-		console.log("Reached2");
-		
-		
-		 db.get('myOtherDoc', function(err, response) {
-			console.log(err || response);
-			});*/
-		
+		db.replicate.from(remote, opts);			
 		console.log("Reached3");
 	// Perform CRUD operations through REST APIs
 	  if(req.method == 'POST') {
 	             insert_records(req,res);
 	             
 	  }
-	  else if(req.method == 'GET') {
-	          list_records(req,res);
+	  else if(req.method == 'GET') {   
+	          list_records(req,res);	          
 	   }
 	   else if(req.method == 'PUT') {
 	          update_records(req,res);
 	    }
 	     else if(req.method == 'DELETE') {
 	          delete_record(req,res);
-	    }
-	      
-   
-      
+	    }      
   
 }).listen(port, host);
 console.log("Connected to port =" + port + " host =  " + host);
